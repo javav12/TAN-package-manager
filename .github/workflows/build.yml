@@ -12,34 +12,33 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - name: Kodu Depodan Çek
+            - name: get code from repo
               uses: actions/checkout@v4
 
-            - name: Sistem Python ve Paket Yöneticisini Güncelle
+            - name: install Python env and system tools
               run: |
                   sudo apt-get update
-                  sudo apt-get install -y patchelf binutils scons python3-pip python3-full python3-venv
+                  sudo apt-get install -y patchelf binutils scons python3-full python3-venv
 
-            - name: Sanal Ortam Oluştur ve Araçları Yükle
-              # Sistem python'ı üzerinden sanal ortam kurarak RUNPATH çakışmalarını engelliyoruz
+            - name: install Python req and tools via venv
               run: |
                   python3 -m venv venv
                   source venv/bin/activate
-                  pip install --upgrade pip
+                  python -m pip install --upgrade pip
                   pip install pyinstaller staticx
 
-            - name: PyInstaller ile Tek Dosya Olarak Derle
+            - name: one file via pyinstaller
               run: |
                   source venv/bin/activate
-                  pyinstaller --onefile --clean script.py
+                  pyinstaller --onefile --clean src/tan/tan_main.py
 
-            - name: StaticX ile Statik/Taşınabilir Hale Getir
+            - name: make it static via staticx
               run: |
                   source venv/bin/activate
-                  staticx dist/script dist/script_static
+                  staticx dist/tan_main dist/tan
 
-            - name: Çıktı Dosyasını Artifact Olarak Kaydet
+            - name: upload output
               uses: actions/upload-artifact@v4
               with:
                   name: static-executable
-                  path: dist/script_static
+                  path: dist/tan
