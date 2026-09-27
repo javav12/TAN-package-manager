@@ -13,17 +13,16 @@ def is_elf(path: Path) -> bool:
             return f.read(4) == b"\x7fELF"
     except Exception:  # noqa: BLE001
         return False
-
 def patch(path: Path):
+    """ELF dosyasının sadece dinamik bağlayıcısını (interpreter) /opt içine yönlendirir."""
     if not is_elf(path):
         return
     
-    # Adında .static geçen veya statik olduğu anlaşılan dosyaları patchelf ile yamalamaya çalışmayalım
     if ".static" in path.name:
         return
 
     try:
-        pf = subprocess.run(
+        subprocess.run(
             [
                 "patchelf",
                 "--set-interpreter",
@@ -36,7 +35,6 @@ def patch(path: Path):
         )
         print(f"Başarıyla yamalandı: {path}")
     except subprocess.CalledProcessError as pf:
-        # Eğer hata .interp bölümünün bulunamamasıyla ilgiliyse yoksayabiliriz
         if ".interp" in pf.stderr:
             return
         print(
@@ -57,9 +55,11 @@ def patch_package(pack: str):
         for line in res.stdout.splitlines():
             line = line.strip()
             if line:
-                p = Path(line)
-                if p.exists():
-                    patch(p)
+                # XBPS -r /opt ile kurulduğunda yollar /usr/... döner, gerçek yol /opt/usr/...
+                real_path = Path("/opt" + line) if line.startswith("/") else Path("/opt") / line
+
+                if real_path.exists():
+                    patch(real_path)
     except subprocess.CalledProcessError:
         print(
             f"'{pack}' paket dosyaları sorgulanamadı, glob taramasına geçiliyor..."
