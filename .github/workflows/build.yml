@@ -12,35 +12,34 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - name: get code from repo
+            - name: Kodu Depodan Çek
               uses: actions/checkout@v4
 
-            - name: install Python env
-              uses: actions/setup-python@v5
-              with:
-                  python-version: "3.11"
-                  cache: "pip"
-
-            - name: install some req
+            - name: Sistem Python ve Paket Yöneticisini Güncelle
               run: |
                   sudo apt-get update
-                  sudo apt-get install -y patchelf binutils scons
+                  sudo apt-get install -y patchelf binutils scons python3-pip python3-full python3-venv
 
-            - name: install Python req and tools
+            - name: Sanal Ortam Oluştur ve Araçları Yükle
+              # Sistem python'ı üzerinden sanal ortam kurarak RUNPATH çakışmalarını engelliyoruz
               run: |
-                  python -m pip install --upgrade pip
+                  python3 -m venv venv
+                  source venv/bin/activate
+                  pip install --upgrade pip
                   pip install pyinstaller staticx
 
-            - name: one file via pyinstaller
+            - name: PyInstaller ile Tek Dosya Olarak Derle
               run: |
-                  pyinstaller --onefile --clean src/tan/tan_main.py
+                  source venv/bin/activate
+                  pyinstaller --onefile --clean script.py
 
-            - name: make it static via staticx
+            - name: StaticX ile Statik/Taşınabilir Hale Getir
               run: |
-                  staticx dist/tan_main dist/tan
+                  source venv/bin/activate
+                  staticx dist/script dist/script_static
 
-            - name: upload output
+            - name: Çıktı Dosyasını Artifact Olarak Kaydet
               uses: actions/upload-artifact@v4
               with:
                   name: static-executable
-                  path: dist/tan
+                  path: dist/script_static
