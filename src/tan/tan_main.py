@@ -111,7 +111,7 @@ def xbps_manage(op: str, packs: str | list[str] | None = None):
                 subprocess.run(cmd, check=True)
 
             case "güncelle" | "guncelle" | "update":
-                cmd = ["xbps-install", "-r", "/opt", "-u", "-y"] + pack_list
+                cmd = ["xbps-install", "-r", "/opt","-S", "-u"] + pack_list
                 subprocess.run(cmd, check=True)
 
                 if pack_list:
