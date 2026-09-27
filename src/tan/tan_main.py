@@ -14,10 +14,14 @@ def is_elf(path: Path) -> bool:
     except Exception:  # noqa: BLE001
         return False
 
-
 def patch(path: Path):
     if not is_elf(path):
         return
+    
+    # Adında .static geçen veya statik olduğu anlaşılan dosyaları patchelf ile yamalamaya çalışmayalım
+    if ".static" in path.name:
+        return
+
     try:
         pf = subprocess.run(
             [
@@ -32,6 +36,9 @@ def patch(path: Path):
         )
         print(f"Başarıyla yamalandı: {path}")
     except subprocess.CalledProcessError as pf:
+        # Eğer hata .interp bölümünün bulunamamasıyla ilgiliyse yoksayabiliriz
+        if ".interp" in pf.stderr:
+            return
         print(
             f"Yamalama HATASI ({path.name}) - Kod: {pf.returncode} Detay: {pf.stderr.strip()}"
         )
